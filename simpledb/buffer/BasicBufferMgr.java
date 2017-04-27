@@ -1,6 +1,7 @@
 package simpledb.buffer;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import simpledb.file.Block;
 import simpledb.file.FileMgr;
@@ -15,7 +16,7 @@ class BasicBufferMgr {
 
 	/*April 27, 2017 - Jitin Kumar
     */
-   private HashMap<Integer,Buffer> bufferPoolMap;
+   private LinkedHashMap<Block,Buffer> bufferPoolMap;
    private int numAvailable;
    
    /**
@@ -39,11 +40,9 @@ class BasicBufferMgr {
 //      numAvailable = numbuffs;
 //      for (int i=0; i<numbuffs; i++)
 //         bufferpool[i] = new Buffer();
-	   bufferPoolMap = new HashMap<Integer,Buffer>(numbuffs);
+	   bufferPoolMap = new LinkedHashMap<Block,Buffer>(numbuffs);
 	   numAvailable = numbuffs;
-	   for(int i=0;i<numbuffs;i++){
-		   bufferPoolMap.put(i, new Buffer());
-	   }
+	   
    }
    
    /**
@@ -57,12 +56,9 @@ class BasicBufferMgr {
 //      for (Buffer buff : bufferpool)
 //         if (buff.isModifiedBy(txnum))
 //         buff.flush();
-	   Buffer buff = null;
-	   for(int i:bufferPoolMap.keySet()){
-		   buff = bufferPoolMap.get(i);
+	   for(Buffer buff : bufferPoolMap.values())
 		   if(buff.isModifiedBy(txnum))
 			   buff.flush();
-	   }
    }
    
    /**
@@ -134,12 +130,8 @@ class BasicBufferMgr {
 //            return buff;
 //      }
 //      return null;
-	   for(int i:bufferPoolMap.keySet()){
-		   Block b = bufferPoolMap.get(i).block();
-		   if(b!=null && b.equals(blk))
-			   return bufferPoolMap.get(i);
-	   }
-	   return null;
+	   return bufferPoolMap.get(blk);
+	   
    }
    
    /*April 27, 2017 - Jitin Kumar
@@ -149,9 +141,9 @@ class BasicBufferMgr {
 //         if (!buff.isPinned())
 //         return buff;
 //      return null;
-	   for(int i:bufferPoolMap.keySet())
-		   if(!bufferPoolMap.get(i).isPinned())
-			   return bufferPoolMap.get(i);
-	   return null;
+	   for(Buffer buff:bufferPoolMap.values())
+		  if(!buff.isPinned())
+			  return buff;
+		   return null;
    }
 }
