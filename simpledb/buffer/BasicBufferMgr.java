@@ -1,6 +1,9 @@
 package simpledb.buffer;
 
-import simpledb.file.*;
+import java.util.HashMap;
+
+import simpledb.file.Block;
+import simpledb.file.FileMgr;
 
 /**
  * Manages the pinning and unpinning of buffers to blocks.
@@ -8,7 +11,11 @@ import simpledb.file.*;
  *
  */
 class BasicBufferMgr {
-   private Buffer[] bufferpool;
+//   private Buffer[] bufferpool;
+
+	/*April 27, 2017 - Jitin Kumar
+    */
+   private HashMap<Integer,Buffer> bufferPoolMap;
    private int numAvailable;
    
    /**
@@ -24,21 +31,38 @@ class BasicBufferMgr {
     * is called first.
     * @param numbuffs the number of buffer slots to allocate
     */
+
+   /*April 27, 2017 - Jitin Kumar
+    */
    BasicBufferMgr(int numbuffs) {
-      bufferpool = new Buffer[numbuffs];
-      numAvailable = numbuffs;
-      for (int i=0; i<numbuffs; i++)
-         bufferpool[i] = new Buffer();
+//      bufferpool = new Buffer[numbuffs];
+//      numAvailable = numbuffs;
+//      for (int i=0; i<numbuffs; i++)
+//         bufferpool[i] = new Buffer();
+	   bufferPoolMap = new HashMap<Integer,Buffer>(numbuffs);
+	   numAvailable = numbuffs;
+	   for(int i=0;i<numbuffs;i++){
+		   bufferPoolMap.put(i, new Buffer());
+	   }
    }
    
    /**
     * Flushes the dirty buffers modified by the specified transaction.
     * @param txnum the transaction's id number
     */
+
+   /*April 27, 2017 - Jitin Kumar
+    */
    synchronized void flushAll(int txnum) {
-      for (Buffer buff : bufferpool)
-         if (buff.isModifiedBy(txnum))
-         buff.flush();
+//      for (Buffer buff : bufferpool)
+//         if (buff.isModifiedBy(txnum))
+//         buff.flush();
+	   Buffer buff = null;
+	   for(int i:bufferPoolMap.keySet()){
+		   buff = bufferPoolMap.get(i);
+		   if(buff.isModifiedBy(txnum))
+			   buff.flush();
+	   }
    }
    
    /**
@@ -101,19 +125,33 @@ class BasicBufferMgr {
       return numAvailable;
    }
    
+   /*April 27, 2017 - Jitin Kumar
+    */
    private Buffer findExistingBuffer(Block blk) {
-      for (Buffer buff : bufferpool) {
-         Block b = buff.block();
-         if (b != null && b.equals(blk))
-            return buff;
-      }
-      return null;
+//      for (Buffer buff : bufferpool) {
+//         Block b = buff.block();
+//         if (b != null && b.equals(blk))
+//            return buff;
+//      }
+//      return null;
+	   for(int i:bufferPoolMap.keySet()){
+		   Block b = bufferPoolMap.get(i).block();
+		   if(b!=null && b.equals(blk))
+			   return bufferPoolMap.get(i);
+	   }
+	   return null;
    }
    
+   /*April 27, 2017 - Jitin Kumar
+    */
    private Buffer chooseUnpinnedBuffer() {
-      for (Buffer buff : bufferpool)
-         if (!buff.isPinned())
-         return buff;
-      return null;
+//      for (Buffer buff : bufferpool)
+//         if (!buff.isPinned())
+//         return buff;
+//      return null;
+	   for(int i:bufferPoolMap.keySet())
+		   if(!bufferPoolMap.get(i).isPinned())
+			   return bufferPoolMap.get(i);
+	   return null;
    }
 }
